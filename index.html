@@ -26,7 +26,7 @@ button{width:100%;border:0;border-radius:14px;padding:15px;margin-top:10px;backg
 </head>
 <body>
 <div class="wrap">
-<header><h1>📚 一年級上學期模擬考</h1><p>iPhone 觸控版・答對賺金幣・答錯扣金幣</p></header>
+<header><h1>📚 一年級上學期模擬考</h1><p>iPhone 觸控版・每次隨機抽題・答對賺金幣・答錯扣金幣</p></header>
 
 <section id="home">
 <div class="card"><div class="stats">
@@ -38,7 +38,7 @@ button{width:100%;border:0;border-radius:14px;padding:15px;margin-top:10px;backg
 <div class="subject" onclick="start('國語')"><div class="icon">📝</div><div class="title">國語・一上</div><div class="small">注音、國字、詞語、閱讀</div></div>
 <div class="subject" onclick="start('數學')"><div class="icon">🔢</div><div class="title">數學・一上</div><div class="small">數數、大小、加減、圖形</div></div>
 </div></div>
-<div class="card"><h2>🪙 金幣規則</h2><p>答對：<b class="good">＋10</b> 金幣</p><p>答錯：<b class="bad">－5</b> 金幣</p><p>連續答對 3 題：額外 <b class="coin">＋10</b></p><p class="small">金幣最低為 0，不會變成負數。</p></div>
+<div class="card"><h2>🔄 隨機出題</h2><p>每次按「再考一次」，會從題庫隨機抽出 15 題，題目順序與選項順序也會重新排列。</p></div><div class="card"><h2>🪙 金幣規則</h2><p>答對：<b class="good">＋10</b> 金幣</p><p>答錯：<b class="bad">－5</b> 金幣</p><p>連續答對 3 題：額外 <b class="coin">＋10</b></p><p class="small">金幣最低為 0，不會變成負數。</p></div>
 </section>
 
 <section id="exam" class="hide">
@@ -101,7 +101,27 @@ function refresh(){
 $("homeCoins").textContent=coins;$("homeLevel").textContent=level(coins);$("homeBest").textContent=maxStreak;
 $("coins").textContent=coins;$("level").textContent=level(coins);$("streak").textContent=streak;
 }
-function start(s){subject=s;qs=data[s];idx=0;answers=[];coins=100;streak=0;maxStreak=0;locked=false;$("home").classList.add("hide");$("result").classList.add("hide");$("exam").classList.remove("hide");$("subject").textContent=s+"・一上";$("total").textContent=qs.length;render();}
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function start(s){
+  subject=s;
+  // 每次開始都從題庫隨機抽 15 題，並把選項順序一起打亂
+  const pool=shuffle(data[s]);
+  qs=shuffle(pool.slice(0,Math.min(15,pool.length))).map(q=>{
+    const choices=q[2].map((text,i)=>({text,correct:i===q[3]}));
+    const mixed=shuffle(choices);
+    return [q[0],q[1],mixed.map(x=>x.text),mixed.findIndex(x=>x.correct)];
+  });
+  idx=0;answers=[];coins=100;streak=0;maxStreak=0;locked=false;
+  $("home").classList.add("hide");$("result").classList.add("hide");$("exam").classList.remove("hide");
+  $("subject").textContent=s+"・一上";$("total").textContent=qs.length;render();
+}
 function render(){
 let q=qs[idx];$("qno").textContent=idx+1;$("type").textContent=q[0];$("question").textContent=q[1];
 $("bar").style.width=((idx+1)/qs.length*100)+"%";$("feedback").textContent="";$("feedback").className="feedback";
