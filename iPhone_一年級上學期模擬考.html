@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#101522">
+<title>一年級上學期模擬考</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#f4f7ff;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:700px;margin:auto;padding:18px 14px 35px}
+header{padding:12px 4px 18px}h1{font-size:25px;margin:0 0 6px}p{color:#9da8bc;margin:5px 0}
+.card{background:#151c2e;border:1px solid #273149;border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 8px 25px #0004}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.subject{padding:20px;border-radius:16px;background:#1b253b;border:1px solid #303c57;cursor:pointer}.subject:active{transform:scale(.98)}
+.icon{font-size:32px}.title{font-size:19px;font-weight:700;margin-top:8px}.small{font-size:13px;color:#9da8bc}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#101729;border-radius:14px;padding:13px;text-align:center}.num{font-size:22px;font-weight:800;margin-top:4px}
+button{width:100%;border:0;border-radius:14px;padding:15px;margin-top:10px;background:#536dff;color:white;font-size:17px;font-weight:700;cursor:pointer}button.secondary{background:#273149}button:disabled{opacity:.45}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:center}.pill{background:#202b44;border-radius:999px;padding:7px 10px;font-size:13px}.coin{color:#ffd45c}
+.progress{height:8px;background:#283149;border-radius:99px;overflow:hidden;margin:15px 0}.bar{height:100%;background:#657cff;width:0}
+.question{font-size:25px;font-weight:800;line-height:1.55;margin:22px 0}.choice{background:#202a41;border:1px solid #34415f;text-align:left}.choice.selected{background:#334a8b;border-color:#7d91ff}
+.feedback{min-height:30px;margin-top:12px;font-weight:700}.good{color:#66e6a0}.bad{color:#ff8181}
+.hide{display:none}.result{text-align:center}.score{font-size:48px;font-weight:900}.wrong{background:#101729;border-radius:13px;padding:12px;margin-top:9px;text-align:left}
+@media(max-width:430px){.grid{grid-template-columns:1fr 1fr}.question{font-size:23px}.wrap{padding:14px 12px 30px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📚 一年級上學期模擬考</h1><p>iPhone 觸控版・答對賺金幣・答錯扣金幣</p></header>
+
+<section id="home">
+<div class="card"><div class="stats">
+<div class="stat">🪙<div class="num" id="homeCoins">100</div><div class="small">金幣</div></div>
+<div class="stat">🏆<div class="num" id="homeLevel">Lv.1</div><div class="small">等級</div></div>
+<div class="stat">🔥<div class="num" id="homeBest">0</div><div class="small">最高連對</div></div>
+</div></div>
+<div class="card"><h2>選擇科目</h2><div class="grid">
+<div class="subject" onclick="start('國語')"><div class="icon">📝</div><div class="title">國語・一上</div><div class="small">注音、國字、詞語、閱讀</div></div>
+<div class="subject" onclick="start('數學')"><div class="icon">🔢</div><div class="title">數學・一上</div><div class="small">數數、大小、加減、圖形</div></div>
+</div></div>
+<div class="card"><h2>🪙 金幣規則</h2><p>答對：<b class="good">＋10</b> 金幣</p><p>答錯：<b class="bad">－5</b> 金幣</p><p>連續答對 3 題：額外 <b class="coin">＋10</b></p><p class="small">金幣最低為 0，不會變成負數。</p></div>
+</section>
+
+<section id="exam" class="hide">
+<div class="top"><span class="pill" id="subject"></span><span class="pill">第 <b id="qno">1</b> / <span id="total">15</span> 題</span></div>
+<div class="top" style="margin-top:10px"><span class="pill">🏆 <b id="level">Lv.1</b></span><span class="pill">🔥 <b id="streak">0</b></span><span class="pill coin">🪙 <b id="coins">100</b></span></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="card"><div class="small" id="type"></div><div class="question" id="question"></div><div id="choices"></div><div class="feedback" id="feedback"></div></div>
+<div class="grid"><button class="secondary" onclick="prev()">上一題</button><button onclick="next()" id="nextBtn">下一題</button></div>
+<button class="secondary" onclick="finish()">交卷看成績</button>
+</section>
+
+<section id="result" class="hide">
+<div class="card result"><div class="small">考試完成</div><div class="score" id="score">0</div><div>答對率</div>
+<p>🪙 最終金幣：<b class="coin" id="finalCoins"></b></p><p>🏆 等級：<b id="finalLevel"></b></p><p>🔥 最高連對：<b id="finalBest"></b></p></div>
+<div class="card"><h2>錯題檢討</h2><div id="review"></div></div>
+<button onclick="backHome()">回首頁再考一次</button>
+</section>
+</div>
+
+<script>
+const data={
+"數學":[
+["數一數","桌上有 3 顆球，再放 2 顆，一共有幾顆？",["4","5","6","7"],1],
+["數一數","下面哪個數字是「六」？",["4","5","6","7"],2],
+["大小比較","哪個數字比較大？",["3","8","5","2"],1],
+["順序","4 的下一個數字是？",["3","4","5","6"],2],
+["順序","8 的前一個數字是？",["6","7","9","10"],1],
+["加法","2＋3＝？",["4","5","6","7"],1],
+["加法","4＋2＝？",["5","6","7","8"],1],
+["減法","7－3＝？",["3","4","5","6"],1],
+["減法","9－5＝？",["3","4","5","6"],1],
+["應用題","小明有 5 顆糖，吃掉 2 顆，還剩幾顆？",["2","3","4","5"],1],
+["應用題","小花有 3 枝鉛筆，媽媽再給她 4 枝，共有幾枝？",["6","7","8","9"],1],
+["比較","哪個比較少？",["9","6","8","7"],1],
+["圖形","哪一個是圓形？",["△","□","○","◇"],2],
+["數數","1、2、3、4、□，下一個是？",["4","5","6","7"],1],
+["綜合","10－1＝？",["8","9","10","11"],1]
+],
+"國語":[
+["注音","「ㄅ」是哪一個字的注音開頭？",["爸爸","媽媽","小狗","花"],0],
+["注音","「ㄇㄚ」可以拼成哪個字？",["馬","米","木","門"],0],
+["國字","「ㄏㄨㄚ」是哪一個字？",["花","火","好","河"],0],
+["國字","「ㄊㄧㄢ」是哪一個字？",["天","田","同","太"],0],
+["詞語","「大」的相反詞是？",["高","小","多","長"],1],
+["詞語","「上」的相反詞是？",["下","左","右","前"],0],
+["詞語","哪一個是水果？",["鉛筆","蘋果","書包","椅子"],1],
+["詞語","哪一個是動物？",["小狗","桌子","太陽","雨衣"],0],
+["閱讀","小明喜歡吃蘋果。小明喜歡吃什麼？",["香蕉","蘋果","西瓜","橘子"],1],
+["閱讀","今天下雨，小美帶了什麼？",["雨傘","球","帽子","玩具"],0],
+["造詞","「小」可以組成哪一個詞？",["小花","大山","高高","快樂"],0],
+["認字","哪一個字是「水」？",["木","火","水","土"],2],
+["認字","哪一個字是「人」？",["入","人","八","大"],1],
+["詞語","「快樂」比較接近哪個意思？",["開心","生氣","難過","害怕"],0],
+["閱讀","小兔在草地上跑。誰在草地上跑？",["小鳥","小狗","小兔","小貓"],2]
+]};
+let subject="",qs=[],idx=0,answers=[],coins=100,streak=0,maxStreak=0,locked=false;
+const $=id=>document.getElementById(id);
+function level(c){return c>=500?"Lv.4":c>=300?"Lv.3":c>=150?"Lv.2":"Lv.1"}
+function refresh(){
+$("homeCoins").textContent=coins;$("homeLevel").textContent=level(coins);$("homeBest").textContent=maxStreak;
+$("coins").textContent=coins;$("level").textContent=level(coins);$("streak").textContent=streak;
+}
+function start(s){subject=s;qs=data[s];idx=0;answers=[];coins=100;streak=0;maxStreak=0;locked=false;$("home").classList.add("hide");$("result").classList.add("hide");$("exam").classList.remove("hide");$("subject").textContent=s+"・一上";$("total").textContent=qs.length;render();}
+function render(){
+let q=qs[idx];$("qno").textContent=idx+1;$("type").textContent=q[0];$("question").textContent=q[1];
+$("bar").style.width=((idx+1)/qs.length*100)+"%";$("feedback").textContent="";$("feedback").className="feedback";
+$("choices").innerHTML="";
+q[2].forEach((c,i)=>{let b=document.createElement("button");b.className="choice";b.textContent=c;b.onclick=()=>answer(i);if(answers[idx]===i)b.classList.add("selected");$("choices").appendChild(b)});
+$("nextBtn").textContent=idx===qs.length-1?"查看結果":"下一題";refresh();
+}
+function answer(i){
+if(locked||answers[idx]!==undefined)return;
+answers[idx]=i;locked=true;
+let correct=i===qs[idx][3];
+if(correct){streak++;maxStreak=Math.max(maxStreak,streak);coins+=10;if(streak%3===0)coins+=10;$("feedback").textContent=streak%3===0?"答對！＋10 金幣，連三再送＋10！":"答對！＋10 金幣";$("feedback").className="feedback good"}
+else{streak=0;coins=Math.max(0,coins-5);$("feedback").textContent="答錯了，－5 金幣";$("feedback").className="feedback bad"}
+[...$("choices").children].forEach((b,n)=>{b.disabled=true;if(n===qs[idx][3])b.classList.add("selected")});refresh();
+}
+function next(){if(idx<qs.length-1){idx++;locked=false;render()}else finish()}
+function prev(){if(idx>0){idx--;locked=answers[idx]!==undefined;render();if(locked){let correct=answers[idx]===qs[idx][3];$("feedback").textContent=correct?"已作答：答對":"已作答：答錯";$("feedback").className="feedback "+(correct?"good":"bad");}}}
+function finish(){
+let correct=answers.reduce((n,a,i)=>n+(a===qs[i][3]?1:0),0);$("exam").classList.add("hide");$("result").classList.remove("hide");
+$("score").textContent=correct+"/"+qs.length;$("finalCoins").textContent=coins;$("finalLevel").textContent=level(coins);$("finalBest").textContent=maxStreak;
+let r="";qs.forEach((q,i)=>{if(answers[i]!==q[3])r+=`<div class="wrong"><b>第 ${i+1} 題</b><br>${q[1]}<br>你的答案：${answers[i]===undefined?"未作答":q[2][answers[i]]}<br>正確答案：<b>${q[2][q[3]]}</b></div>`});
+$("review").innerHTML=r||"<p class='good'>🎉 全部答對！太棒了！</p>";
+}
+function backHome(){$("result").classList.add("hide");$("home").classList.remove("hide");refresh()}
+refresh();
+</script>
+</body>
+</html>
